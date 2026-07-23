@@ -1,8 +1,8 @@
 "use client"
 
 import { useRef, useState, useEffect } from "react"
-import { ChevronLeft, ChevronRight } from "lucide-react"
-import { MenuCard } from "@/components/menu-card"
+import { ChevronLeft, ChevronRight, Star, Leaf } from "lucide-react"
+import { Button } from "@/components/ui/button"
 import type { MenuItem } from "@/lib/types"
 
 export function FeaturedCarousel({ items }: { items: MenuItem[] }) {
@@ -12,10 +12,9 @@ export function FeaturedCarousel({ items }: { items: MenuItem[] }) {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isMobile, setIsMobile] = useState(false)
 
-  // Touch drag state
-  const [isDragging, setIsDragging] = useState(false)
-  const [startX, setStartX] = useState(0)
-  const [scrollLeftStart, setScrollLeftStart] = useState(0)
+  // Swipe state
+  const [touchStartX, setTouchStartX] = useState(0)
+  const [touchEndX, setTouchEndX] = useState(0)
 
   useEffect(() => {
     const checkMobile = () => {
@@ -29,95 +28,64 @@ export function FeaturedCarousel({ items }: { items: MenuItem[] }) {
   const itemsPerView = isMobile ? 1 : 3
   const totalSlides = Math.ceil(items.length / itemsPerView)
 
-  useEffect(() => {
-    const handleResize = () => {
-      if (scrollContainerRef.current) {
-        const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current
-        setShowLeftArrow(scrollLeft > 0)
-        setShowRightArrow(scrollLeft < scrollWidth - clientWidth - 10)
-      }
-    }
-    handleResize()
-    window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
-  }, [itemsPerView])
-
-  const scroll = (direction: 'left' | 'right') => {
+  const scrollToSlide = (index: number) => {
     if (scrollContainerRef.current) {
-      const cardWidth = isMobile ? 280 : 320
-      const newIndex = direction === 'left' 
-        ? Math.max(0, currentIndex - 1)
-        : Math.min(totalSlides - 1, currentIndex + 1)
+      const container = scrollContainerRef.current
+      const cardWidth = container.querySelector('.menu-card')?.getBoundingClientRect()?.width || (isMobile ? 280 : 320)
+      const gap = isMobile ? 12 : 24
+      const scrollAmount = index * (cardWidth + gap)
       
-      setCurrentIndex(newIndex)
-      scrollContainerRef.current.scrollTo({
-        left: newIndex * (cardWidth * itemsPerView),
+      setCurrentIndex(index)
+      container.scrollTo({
+        left: scrollAmount,
         behavior: 'smooth'
       })
     }
   }
 
+  const scroll = (direction: 'left' | 'right') => {
+    const newIndex = direction === 'left' 
+      ? Math.max(0, currentIndex - 1)
+      : Math.min(totalSlides - 1, currentIndex + 1)
+    scrollToSlide(newIndex)
+  }
+
   const handleScroll = () => {
     if (scrollContainerRef.current) {
       const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current
-      setShowLeftArrow(scrollLeft > 0)
+      setShowLeftArrow(scrollLeft > 10)
       setShowRightArrow(scrollLeft < scrollWidth - clientWidth - 10)
       
-      const cardWidth = isMobile ? 280 : 320
-      const newIndex = Math.round(scrollLeft / (cardWidth * itemsPerView))
+      const container = scrollContainerRef.current
+      const cardWidth = container.querySelector('.menu-card')?.getBoundingClientRect()?.width || (isMobile ? 280 : 320)
+      const gap = isMobile ? 12 : 24
+      const newIndex = Math.round(scrollLeft / (cardWidth + gap))
       setCurrentIndex(newIndex)
     }
   }
 
-  // ========== SWIPE / DRAG HANDLERS ==========
-  const handleMouseDown = (e: React.MouseEvent) => {
-    if (!scrollContainerRef.current) return
-    setIsDragging(true)
-    setStartX(e.pageX - scrollContainerRef.current.offsetLeft)
-    setScrollLeftStart(scrollContainerRef.current.scrollLeft)
-    scrollContainerRef.current.style.cursor = 'grabbing'
-    scrollContainerRef.current.style.userSelect = 'none'
-  }
-
-  const handleMouseUp = () => {
-    setIsDragging(false)
-    if (scrollContainerRef.current) {
-      scrollContainerRef.current.style.cursor = 'grab'
-      scrollContainerRef.current.style.userSelect = 'auto'
-    }
-  }
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging || !scrollContainerRef.current) return
-    e.preventDefault()
-    const x = e.pageX - scrollContainerRef.current.offsetLeft
-    const walk = (x - startX) * 1.5
-    scrollContainerRef.current.scrollLeft = scrollLeftStart - walk
-  }
-
-  // Touch handlers
+  // Swipe handlers
   const handleTouchStart = (e: React.TouchEvent) => {
-    if (!scrollContainerRef.current) return
-    setIsDragging(true)
-    setStartX(e.touches[0].pageX - scrollContainerRef.current.offsetLeft)
-    setScrollLeftStart(scrollContainerRef.current.scrollLeft)
+    setTouchStartX(e.touches[0].clientX)
   }
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    if (!isDragging || !scrollContainerRef.current) return
-    const x = e.touches[0].pageX - scrollContainerRef.current.offsetLeft
-    const walk = (x - startX) * 1.5
-    scrollContainerRef.current.scrollLeft = scrollLeftStart - walk
+    setTouchEndX(e.touches[0].clientX)
   }
 
   const handleTouchEnd = () => {
-    setIsDragging(false)
-  }
-
-  // Create slides array
-  const slides = []
-  for (let i = 0; i < items.length; i += itemsPerView) {
-    slides.push(items.slice(i, i + itemsPerView))
+    const swipeDistance = touchStartX - touchEndX
+    
+    if (Math.abs(swipeDistance) > 50) {
+      if (swipeDistance > 0 && currentIndex < totalSlides - 1) {
+        scrollToSlide(currentIndex + 1)
+      } else if (swipeDistance < 0 && currentIndex > 0) {
+        scrollToSlide(currentIndex - 1)
+      }
+    }
+    
+    setTouchStartX(0)
+    setTouchEndX(0)
   }
 
   if (items.length === 0) {
@@ -125,11 +93,11 @@ export function FeaturedCarousel({ items }: { items: MenuItem[] }) {
   }
 
   return (
-    <section className="bg-secondary/40">
-      <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 md:py-16">
+    <section className="bg-secondary/40 py-12 md:py-16">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <div className="mb-6 md:mb-10 text-center">
           <p className="text-xs md:text-sm font-medium uppercase tracking-widest text-primary">Guest favourites</p>
-          <h2 className="mt-1 md:mt-2 font-serif text-2xl md:text-3xl font-bold sm:text-4xl">Signature dishes</h2>
+          <h2 className="mt-1 md:mt-2 font-serif text-2xl md:text-3xl font-bold">Signature dishes</h2>
           <p className="text-xs md:text-sm text-muted-foreground mt-1">Our most loved pure vegetarian creations</p>
         </div>
         
@@ -143,41 +111,84 @@ export function FeaturedCarousel({ items }: { items: MenuItem[] }) {
               }`}
               aria-label="Previous"
             >
-              <ChevronLeft className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5 md:h-6 md:w-6'} text-gray-700 dark:text-gray-300`} />
+              <ChevronLeft className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'} text-gray-700 dark:text-gray-300`} />
             </button>
           )}
 
-          {/* Scroll Container with Drag/Swipe */}
+          {/* Scroll Container */}
           <div
             ref={scrollContainerRef}
             onScroll={handleScroll}
-            onMouseDown={handleMouseDown}
-            onMouseUp={handleMouseUp}
-            onMouseLeave={handleMouseUp}
-            onMouseMove={handleMouseMove}
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
-            className="overflow-hidden scroll-smooth cursor-grab select-none"
-            style={{ scrollBehavior: 'smooth' }}
+            className="overflow-x-auto scroll-smooth touch-pan-y"
+            style={{ 
+              scrollbarWidth: 'none', 
+              msOverflowStyle: 'none',
+              WebkitOverflowScrolling: 'touch'
+            }}
           >
-            <div className="flex gap-3 md:gap-6 transition-all duration-300" style={{ width: '100%' }}>
-              {slides.map((slide, slideIndex) => (
-                <div 
-                  key={slideIndex}
-                  className="flex gap-3 md:gap-6 flex-shrink-0"
-                  style={{ width: '100%' }}
-                >
-                  {slide.map((item) => (
-                    <div key={item.id} className="flex-1 min-w-0">
-                      <MenuCard item={item} />
+            <div className="flex gap-3 md:gap-6" style={{ width: 'max-content' }}>
+              {items.map((item) => (
+                <div key={item.id} className="menu-card w-[200px] md:w-[240px] flex-shrink-0">
+                  <div className="bg-background rounded-xl border border-border/60 overflow-hidden hover:shadow-md transition-shadow">
+                    {/* Image - Small & Compact */}
+                    <div className="relative h-32 md:h-40 bg-muted/30">
+                      {item.image_url ? (
+                        <img
+                          src={item.image_url}
+                          alt={item.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                          <span className="text-xs">No image</span>
+                        </div>
+                      )}
+                      {item.is_veg && (
+                        <div className="absolute top-2 left-2">
+                          <span className="inline-flex items-center gap-1 rounded-full bg-green-600/90 px-1.5 py-0.5 text-[10px] font-medium text-white">
+                            <Leaf className="h-2.5 w-2.5" />
+                            Pure Veg
+                          </span>
+                        </div>
+                      )}
+                      {item.rating && (
+                        <div className="absolute bottom-2 right-2">
+                          <span className="inline-flex items-center gap-0.5 rounded-full bg-black/70 px-1.5 py-0.5 text-[10px] font-medium text-white">
+                            <Star className="h-2.5 w-2.5 fill-yellow-400 text-yellow-400" />
+                            {Number(item.rating).toFixed(1)}
+                          </span>
+                        </div>
+                      )}
                     </div>
-                  ))}
-                  {slide.length < itemsPerView && 
-                    Array.from({ length: itemsPerView - slide.length }).map((_, i) => (
-                      <div key={`empty-${i}`} className="flex-1 min-w-0" />
-                    ))
-                  }
+
+                    {/* Content - Compact */}
+                    <div className="p-3 md:p-4">
+                      <div className="flex items-start justify-between gap-1">
+                        <h3 className="text-sm md:text-base font-semibold text-foreground truncate">
+                          {item.name}
+                        </h3>
+                        <span className="text-sm md:text-base font-bold text-primary whitespace-nowrap">
+                          ₹{item.price}
+                        </span>
+                      </div>
+                      
+                      <p className="mt-1 text-xs text-muted-foreground line-clamp-1">
+                        {item.category}
+                      </p>
+                      
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="mt-2 w-full text-xs h-8 border-primary/30 text-primary hover:bg-primary/10"
+                        onClick={() => window.location.href = `/menu/${item.id}`}
+                      >
+                        View Item
+                      </Button>
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
@@ -192,7 +203,7 @@ export function FeaturedCarousel({ items }: { items: MenuItem[] }) {
               }`}
               aria-label="Next"
             >
-              <ChevronRight className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5 md:h-6 md:w-6'} text-gray-700 dark:text-gray-300`} />
+              <ChevronRight className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'} text-gray-700 dark:text-gray-300`} />
             </button>
           )}
         </div>
@@ -203,16 +214,7 @@ export function FeaturedCarousel({ items }: { items: MenuItem[] }) {
             {Array.from({ length: totalSlides }).map((_, index) => (
               <button
                 key={index}
-                onClick={() => {
-                  setCurrentIndex(index)
-                  if (scrollContainerRef.current) {
-                    const cardWidth = isMobile ? 280 : 320
-                    scrollContainerRef.current.scrollTo({
-                      left: index * (cardWidth * itemsPerView),
-                      behavior: 'smooth'
-                    })
-                  }
-                }}
+                onClick={() => scrollToSlide(index)}
                 className={`h-1.5 rounded-full transition-all ${
                   index === currentIndex
                     ? "w-6 bg-primary"
