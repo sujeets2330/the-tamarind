@@ -7,12 +7,12 @@ import type { MenuItem } from "@/lib/types"
 
 export function FeaturedCarousel({ items }: { items: MenuItem[] }) {
   const scrollContainerRef = useRef<HTMLDivElement>(null)
+
+  const [isMobile, setIsMobile] = useState(false)
+  const [currentPage, setCurrentPage] = useState(0)
   const [showLeftArrow, setShowLeftArrow] = useState(false)
   const [showRightArrow, setShowRightArrow] = useState(true)
-  const [currentIndex, setCurrentIndex] = useState(0)
-  const [isMobile, setIsMobile] = useState(false)
 
-  // Swipe state
   const [touchStartX, setTouchStartX] = useState(0)
   const [touchEndX, setTouchEndX] = useState(0)
 
@@ -20,51 +20,55 @@ export function FeaturedCarousel({ items }: { items: MenuItem[] }) {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768)
     }
+
     checkMobile()
-    window.addEventListener('resize', checkMobile)
-    return () => window.removeEventListener('resize', checkMobile)
+    window.addEventListener("resize", checkMobile)
+
+    return () => window.removeEventListener("resize", checkMobile)
   }, [])
 
-  const itemsPerView = isMobile ? 1 : 3
-  const totalSlides = Math.ceil(items.length / itemsPerView)
+  const itemsPerPage = isMobile ? 1 : 4
+  const totalPages = Math.ceil(items.length / itemsPerPage)
 
-  const scrollToSlide = (index: number) => {
-    if (scrollContainerRef.current) {
-      const container = scrollContainerRef.current
-      const cardWidth = container.querySelector('.menu-card')?.getBoundingClientRect()?.width || (isMobile ? 280 : 320)
-      const gap = isMobile ? 12 : 24
-      const scrollAmount = index * (cardWidth + gap)
-      
-      setCurrentIndex(index)
-      container.scrollTo({
-        left: scrollAmount,
-        behavior: 'smooth'
-      })
-    }
+  const scrollToPage = (page: number) => {
+    if (!scrollContainerRef.current) return
+
+    const container = scrollContainerRef.current
+
+    container.scrollTo({
+      left: page * container.clientWidth,
+      behavior: "smooth",
+    })
+
+    setCurrentPage(page)
   }
 
-  const scroll = (direction: 'left' | 'right') => {
-    const newIndex = direction === 'left' 
-      ? Math.max(0, currentIndex - 1)
-      : Math.min(totalSlides - 1, currentIndex + 1)
-    scrollToSlide(newIndex)
+  const scroll = (direction: "left" | "right") => {
+    const next =
+      direction === "left"
+        ? Math.max(0, currentPage - 1)
+        : Math.min(totalPages - 1, currentPage + 1)
+
+    scrollToPage(next)
   }
 
   const handleScroll = () => {
-    if (scrollContainerRef.current) {
-      const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current
-      setShowLeftArrow(scrollLeft > 10)
-      setShowRightArrow(scrollLeft < scrollWidth - clientWidth - 10)
-      
-      const container = scrollContainerRef.current
-      const cardWidth = container.querySelector('.menu-card')?.getBoundingClientRect()?.width || (isMobile ? 280 : 320)
-      const gap = isMobile ? 12 : 24
-      const newIndex = Math.round(scrollLeft / (cardWidth + gap))
-      setCurrentIndex(newIndex)
-    }
+    if (!scrollContainerRef.current) return
+
+    const container = scrollContainerRef.current
+
+    const page = Math.round(container.scrollLeft / container.clientWidth)
+
+    setCurrentPage(page)
+
+    setShowLeftArrow(container.scrollLeft > 5)
+
+    setShowRightArrow(
+      container.scrollLeft <
+        container.scrollWidth - container.clientWidth - 5
+    )
   }
 
-  // Swipe handlers
   const handleTouchStart = (e: React.TouchEvent) => {
     setTouchStartX(e.touches[0].clientX)
   }
@@ -74,116 +78,129 @@ export function FeaturedCarousel({ items }: { items: MenuItem[] }) {
   }
 
   const handleTouchEnd = () => {
-    const swipeDistance = touchStartX - touchEndX
-    
-    if (Math.abs(swipeDistance) > 50) {
-      if (swipeDistance > 0 && currentIndex < totalSlides - 1) {
-        scrollToSlide(currentIndex + 1)
-      } else if (swipeDistance < 0 && currentIndex > 0) {
-        scrollToSlide(currentIndex - 1)
+    const distance = touchStartX - touchEndX
+
+    if (Math.abs(distance) > 50) {
+      if (distance > 0 && currentPage < totalPages - 1) {
+        scrollToPage(currentPage + 1)
+      } else if (distance < 0 && currentPage > 0) {
+        scrollToPage(currentPage - 1)
       }
     }
-    
+
     setTouchStartX(0)
     setTouchEndX(0)
   }
 
-  if (items.length === 0) {
-    return null
-  }
+  if (!items.length) return null
 
   return (
     <section className="bg-secondary/40 py-12 md:py-16">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <div className="mb-6 md:mb-10 text-center">
-          <p className="text-xs md:text-sm font-medium uppercase tracking-widest text-primary">Guest favourites</p>
-          <h2 className="mt-1 md:mt-2 font-serif text-2xl md:text-3xl font-bold">Signature dishes</h2>
-          <p className="text-xs md:text-sm text-muted-foreground mt-1">Our most loved pure vegetarian creations</p>
+          <p className="text-xs md:text-sm font-medium uppercase tracking-widest text-primary">
+            Guest favourites
+          </p>
+
+          <h2 className="mt-2 font-serif text-2xl md:text-3xl font-bold">
+            Signature dishes
+          </h2>
+
+          <p className="mt-1 text-xs md:text-sm text-muted-foreground">
+            Our most loved pure vegetarian creations
+          </p>
         </div>
-        
+
         <div className="relative">
-          {/* Left Arrow */}
+          {/* Left Arrow - Enhanced */}
           {showLeftArrow && (
             <button
-              onClick={() => scroll('left')}
-              className={`absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white/90 dark:bg-gray-900/90 rounded-full p-2 shadow-lg hover:bg-white dark:hover:bg-gray-900 transition-all duration-200 border border-gray-200 dark:border-gray-700 ${
-                isMobile ? '-ml-2 p-1.5' : '-ml-4 p-2'
-              }`}
+              onClick={() => scroll("left")}
+              className="absolute left-0 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white shadow-lg hover:bg-primary hover:text-white transition-all duration-200 border border-gray-200 hover:border-primary p-2.5 -ml-4"
               aria-label="Previous"
             >
-              <ChevronLeft className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'} text-gray-700 dark:text-gray-300`} />
+              <ChevronLeft className="h-5 w-5 text-gray-700 hover:text-white transition-colors" />
             </button>
           )}
 
-          {/* Scroll Container */}
           <div
             ref={scrollContainerRef}
             onScroll={handleScroll}
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
-            className="overflow-x-auto scroll-smooth touch-pan-y"
-            style={{ 
-              scrollbarWidth: 'none', 
-              msOverflowStyle: 'none',
-              WebkitOverflowScrolling: 'touch'
+            className="overflow-x-auto scroll-smooth snap-x snap-mandatory"
+            style={{
+              scrollbarWidth: "none",
+              msOverflowStyle: "none",
             }}
           >
-            <div className="flex gap-3 md:gap-6" style={{ width: 'max-content' }}>
+            <div className="flex">
               {items.map((item) => (
-                <div key={item.id} className="menu-card w-[200px] md:w-[240px] flex-shrink-0">
-                  <div className="bg-background rounded-xl border border-border/60 overflow-hidden hover:shadow-md transition-shadow">
-                    {/* Image - Small & Compact */}
-                    <div className="relative h-32 md:h-40 bg-muted/30">
+                <div
+                  key={item.id}
+                  className="
+                    snap-start
+                    shrink-0
+                    w-full
+                    md:w-1/4
+                    p-2
+                  "
+                >
+                  <div className="overflow-hidden rounded-xl border bg-background transition hover:shadow-md">
+                    <div className="relative h-32 md:h-40 bg-muted">
                       {item.image_url ? (
                         <img
                           src={item.image_url}
                           alt={item.name}
-                          className="w-full h-full object-cover"
+                          className="h-full w-full object-cover"
                         />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                          <span className="text-xs">No image</span>
+                        <div className="flex h-full items-center justify-center text-muted-foreground">
+                          No image
                         </div>
                       )}
+
                       {item.is_veg && (
-                        <div className="absolute top-2 left-2">
-                          <span className="inline-flex items-center gap-1 rounded-full bg-green-600/90 px-1.5 py-0.5 text-[10px] font-medium text-white">
-                            <Leaf className="h-2.5 w-2.5" />
+                        <div className="absolute left-2 top-2">
+                          <span className="inline-flex items-center gap-1 rounded-full bg-green-600 px-2 py-1 text-[10px] text-white">
+                            <Leaf className="h-3 w-3" />
                             Pure Veg
                           </span>
                         </div>
                       )}
+
                       {item.rating && (
                         <div className="absolute bottom-2 right-2">
-                          <span className="inline-flex items-center gap-0.5 rounded-full bg-black/70 px-1.5 py-0.5 text-[10px] font-medium text-white">
-                            <Star className="h-2.5 w-2.5 fill-yellow-400 text-yellow-400" />
+                          <span className="inline-flex items-center gap-1 rounded-full bg-black/70 px-2 py-1 text-[10px] text-white">
+                            <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
                             {Number(item.rating).toFixed(1)}
                           </span>
                         </div>
                       )}
                     </div>
 
-                    {/* Content - Compact */}
-                    <div className="p-3 md:p-4">
-                      <div className="flex items-start justify-between gap-1">
-                        <h3 className="text-sm md:text-base font-semibold text-foreground truncate">
+                    <div className="p-4">
+                      <div className="flex items-start justify-between">
+                        <h3 className="truncate font-semibold">
                           {item.name}
                         </h3>
-                        <span className="text-sm md:text-base font-bold text-primary whitespace-nowrap">
+
+                        <span className="font-bold text-primary">
                           ₹{item.price}
                         </span>
                       </div>
-                      
-                      <p className="mt-1 text-xs text-muted-foreground line-clamp-1">
+
+                      <p className="mt-1 text-sm text-muted-foreground">
                         {item.category}
                       </p>
-                      
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="mt-2 w-full text-xs h-8 border-primary/30 text-primary hover:bg-primary/10"
-                        onClick={() => window.location.href = `/menu/${item.id}`}
+
+                      <Button
+                        variant="outline"
+                        className="mt-4 w-full"
+                        onClick={() =>
+                          (window.location.href = `/menu/${item.id}`)
+                        }
                       >
                         View Item
                       </Button>
@@ -194,33 +211,29 @@ export function FeaturedCarousel({ items }: { items: MenuItem[] }) {
             </div>
           </div>
 
-          {/* Right Arrow */}
+          {/* Right Arrow - Enhanced */}
           {showRightArrow && (
             <button
-              onClick={() => scroll('right')}
-              className={`absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white/90 dark:bg-gray-900/90 rounded-full p-2 shadow-lg hover:bg-white dark:hover:bg-gray-900 transition-all duration-200 border border-gray-200 dark:border-gray-700 ${
-                isMobile ? '-mr-2 p-1.5' : '-mr-4 p-2'
-              }`}
+              onClick={() => scroll("right")}
+              className="absolute right-0 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white shadow-lg hover:bg-primary hover:text-white transition-all duration-200 border border-gray-200 hover:border-primary p-2.5 -mr-4"
               aria-label="Next"
             >
-              <ChevronRight className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'} text-gray-700 dark:text-gray-300`} />
+              <ChevronRight className="h-5 w-5 text-gray-700 hover:text-white transition-colors" />
             </button>
           )}
         </div>
 
-        {/* Dot indicators */}
-        {totalSlides > 1 && (
-          <div className="flex justify-center gap-1.5 mt-4">
-            {Array.from({ length: totalSlides }).map((_, index) => (
+        {totalPages > 1 && (
+          <div className="mt-6 flex justify-center gap-2">
+            {Array.from({ length: totalPages }).map((_, index) => (
               <button
                 key={index}
-                onClick={() => scrollToSlide(index)}
-                className={`h-1.5 rounded-full transition-all ${
-                  index === currentIndex
-                    ? "w-6 bg-primary"
-                    : "w-1.5 bg-muted-foreground/30"
+                onClick={() => scrollToPage(index)}
+                className={`h-2 rounded-full transition-all ${
+                  currentPage === index
+                    ? "w-8 bg-primary"
+                    : "w-2 bg-muted-foreground/30"
                 }`}
-                aria-label={`Go to slide ${index + 1}`}
               />
             ))}
           </div>
