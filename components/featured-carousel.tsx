@@ -1,7 +1,7 @@
 "use client"
 
 import { useRef, useState, useEffect } from "react"
-import { ChevronLeft, ChevronRight } from "lucide-react"
+import { ChevronLeft, ChevronRight, Star, Leaf } from "lucide-react"
 import { MenuCard } from "@/components/menu-card"
 import type { MenuItem } from "@/lib/types"
 
@@ -10,7 +10,18 @@ export function FeaturedCarousel({ items }: { items: MenuItem[] }) {
   const [showLeftArrow, setShowLeftArrow] = useState(false)
   const [showRightArrow, setShowRightArrow] = useState(true)
   const [currentIndex, setCurrentIndex] = useState(0)
-  const itemsPerView = 3
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
+
+  const itemsPerView = isMobile ? 1 : 3
   const totalSlides = Math.ceil(items.length / itemsPerView)
 
   useEffect(() => {
@@ -24,11 +35,11 @@ export function FeaturedCarousel({ items }: { items: MenuItem[] }) {
     handleResize()
     window.addEventListener('resize', handleResize)
     return () => window.removeEventListener('resize', handleResize)
-  }, [])
+  }, [itemsPerView])
 
   const scroll = (direction: 'left' | 'right') => {
     if (scrollContainerRef.current) {
-      const cardWidth = 320
+      const cardWidth = isMobile ? 280 : 320
       const newIndex = direction === 'left' 
         ? Math.max(0, currentIndex - 1)
         : Math.min(totalSlides - 1, currentIndex + 1)
@@ -47,32 +58,42 @@ export function FeaturedCarousel({ items }: { items: MenuItem[] }) {
       setShowLeftArrow(scrollLeft > 0)
       setShowRightArrow(scrollLeft < scrollWidth - clientWidth - 10)
       
-      const cardWidth = 320
+      const cardWidth = isMobile ? 280 : 320
       const newIndex = Math.round(scrollLeft / (cardWidth * itemsPerView))
       setCurrentIndex(newIndex)
     }
   }
 
+  // Create slides array
   const slides = []
   for (let i = 0; i < items.length; i += itemsPerView) {
     slides.push(items.slice(i, i + itemsPerView))
   }
 
+  if (items.length === 0) {
+    return null
+  }
+
   return (
     <section className="bg-secondary/40">
-      <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 md:py-24">
-        <div className="mb-10 text-center">
-          <p className="text-sm font-medium uppercase tracking-widest text-primary">Guest favourites</p>
-          <h2 className="mt-2 font-serif text-3xl font-bold sm:text-4xl">Signature dishes</h2>
+      <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 md:py-16">
+        <div className="mb-6 md:mb-10 text-center">
+          <p className="text-xs md:text-sm font-medium uppercase tracking-widest text-primary">Guest favourites</p>
+          <h2 className="mt-1 md:mt-2 font-serif text-2xl md:text-3xl font-bold sm:text-4xl">Signature dishes</h2>
+          <p className="text-xs md:text-sm text-muted-foreground mt-1">Our most loved pure vegetarian creations</p>
         </div>
         
         <div className="relative">
+          {/* Left Arrow - Always visible when needed */}
           {showLeftArrow && (
             <button
               onClick={() => scroll('left')}
-              className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white/90 dark:bg-gray-900/90 rounded-full p-2 shadow-lg hover:bg-white dark:hover:bg-gray-900 transition-all duration-200 -ml-4 border border-gray-200 dark:border-gray-700"
+              className={`absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white/90 dark:bg-gray-900/90 rounded-full p-2 shadow-lg hover:bg-white dark:hover:bg-gray-900 transition-all duration-200 border border-gray-200 dark:border-gray-700 ${
+                isMobile ? '-ml-2 p-1.5' : '-ml-4 p-2'
+              }`}
+              aria-label="Previous"
             >
-              <ChevronLeft className="h-6 w-6 text-gray-700 dark:text-gray-300" />
+              <ChevronLeft className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5 md:h-6 md:w-6'} text-gray-700 dark:text-gray-300`} />
             </button>
           )}
 
@@ -81,11 +102,11 @@ export function FeaturedCarousel({ items }: { items: MenuItem[] }) {
             onScroll={handleScroll}
             className="overflow-hidden scroll-smooth"
           >
-            <div className="flex gap-6 transition-all duration-300" style={{ width: '100%' }}>
+            <div className="flex gap-3 md:gap-6 transition-all duration-300" style={{ width: '100%' }}>
               {slides.map((slide, slideIndex) => (
                 <div 
                   key={slideIndex}
-                  className="flex gap-6 flex-shrink-0"
+                  className="flex gap-3 md:gap-6 flex-shrink-0"
                   style={{ width: '100%' }}
                 >
                   {slide.map((item) => (
@@ -103,15 +124,46 @@ export function FeaturedCarousel({ items }: { items: MenuItem[] }) {
             </div>
           </div>
 
+          {/* Right Arrow - Always visible when needed */}
           {showRightArrow && (
             <button
               onClick={() => scroll('right')}
-              className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white/90 dark:bg-gray-900/90 rounded-full p-2 shadow-lg hover:bg-white dark:hover:bg-gray-900 transition-all duration-200 -mr-4 border border-gray-200 dark:border-gray-700"
+              className={`absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white/90 dark:bg-gray-900/90 rounded-full p-2 shadow-lg hover:bg-white dark:hover:bg-gray-900 transition-all duration-200 border border-gray-200 dark:border-gray-700 ${
+                isMobile ? '-mr-2 p-1.5' : '-mr-4 p-2'
+              }`}
+              aria-label="Next"
             >
-              <ChevronRight className="h-6 w-6 text-gray-700 dark:text-gray-300" />
+              <ChevronRight className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5 md:h-6 md:w-6'} text-gray-700 dark:text-gray-300`} />
             </button>
           )}
         </div>
+
+        {/* Dot indicators for mobile */}
+        {isMobile && totalSlides > 1 && (
+          <div className="flex justify-center gap-1.5 mt-4">
+            {Array.from({ length: totalSlides }).map((_, index) => (
+              <button
+                key={index}
+                onClick={() => {
+                  setCurrentIndex(index)
+                  if (scrollContainerRef.current) {
+                    const cardWidth = 280
+                    scrollContainerRef.current.scrollTo({
+                      left: index * (cardWidth * itemsPerView),
+                      behavior: 'smooth'
+                    })
+                  }
+                }}
+                className={`h-1.5 rounded-full transition-all ${
+                  index === currentIndex
+                    ? "w-6 bg-primary"
+                    : "w-1.5 bg-muted-foreground/30"
+                }`}
+                aria-label={`Go to slide ${index + 1}`}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </section>
   )
