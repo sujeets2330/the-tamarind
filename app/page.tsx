@@ -40,67 +40,40 @@ export default async function HomePage() {
 
       <main className="flex-1">
         {/* Hero */}
-        <section className="relative">
-          <div className="absolute inset-0">
-            <Image
-              src="/hero.jpeg"
-              alt="Pure vegetarian restaurant - The Tamarind Pure Veg"
-              fill
-              priority
-              className="object-cover"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-background/30" />
-          </div>
+<section className="relative">
+  <div className="absolute inset-0">
+    <Image
+      src="/hero.JPEG"
+      alt="Pure vegetarian restaurant - The Tamarind Pure Veg"
+      fill
+      priority
+      className="object-cover"
+    />
+    <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-background/30" />
+  </div>
 
-          <div className="relative mx-auto flex max-w-6xl flex-col items-start justify-center px-4 py-28 sm:px-6 md:py-40">
-            <span className="mb-4 inline-flex items-center gap-2 rounded-full border border-green-600/30 bg-green-600/10 px-3 py-1 text-xs font-medium backdrop-blur">
-              <Leaf className="h-3.5 w-3.5 text-green-600" aria-hidden="true" />
-              Pure Vegetarian · Since 2016
-            </span>
-             
-            <h1 className="max-w-2xl text-balance font-serif text-4xl font-bold leading-tight sm:text-6xl">
-              <span className="text-green-600">The Tamarind</span> Pure Veg
-            </h1>
-            <p className="mt-4 max-w-lg text-pretty text-base leading-relaxed text-muted-foreground sm:text-lg">
-              Authentic Indian vegetarian cuisine made with love. Fresh ingredients, 
-              hand-picked spices, and a cozy table waiting just for you. 
-              Reserve in seconds — no account needed.
-            </p>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <Button render={<Link href="/booking" />} size="lg" className="bg-green-600 hover:bg-green-700">
-                Book a Table
-                <ArrowRight className="ml-1 h-4 w-4" />
-              </Button>
-              
-              <div className="relative group">
-                <Button size="lg" variant="outline" className="bg-background/60 backdrop-blur border-green-600/30 hover:border-green-600 flex items-center gap-1">
-                  View Menu
-                  <ArrowRight className="ml-1 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                </Button>
-                <div className="absolute left-0 mt-2 w-56 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-                  <div className="rounded-lg border border-border/60 bg-background/95 backdrop-blur-md shadow-lg py-1">
-                    <div className="px-3 py-1.5 text-xs font-medium text-muted-foreground border-b border-border/40">
-                      Select Branch
-                    </div>
-                    <Link
-                      href="/menu/branch1"
-                      className="block px-4 py-2 text-sm text-foreground hover:bg-green-50 hover:text-green-600 transition-colors"
-                    >
-                      Tamarind Branch 1
-                    </Link>
-                    <Link
-                      href="/menu"
-                      className="block px-4 py-2 text-sm text-foreground hover:bg-green-50 hover:text-green-600 transition-colors"
-                    >
-                      Tamarind Branch 2
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
+  <div className="relative mx-auto flex max-w-6xl flex-col items-start justify-center px-4 py-28 sm:px-6 md:py-40">
+    <span className="mb-4 inline-flex items-center gap-2 rounded-full border border-green-600/30 bg-green-600/10 px-3 py-1 text-xs font-medium backdrop-blur">
+      <Leaf className="h-3.5 w-3.5 text-green-600" aria-hidden="true" />
+      Pure Vegetarian · Since 2016
+    </span>
+     
+    <h1 className="max-w-2xl text-balance font-serif text-4xl font-bold leading-tight sm:text-6xl">
+      <span className="text-green-600">The Tamarind</span> Pure Veg
+    </h1>
+    <p className="mt-4 max-w-lg text-pretty text-base leading-relaxed text-muted-foreground sm:text-lg">
+      Authentic Indian vegetarian cuisine made with love. Fresh ingredients, 
+      hand-picked spices, and a cozy table waiting just for you. 
+      Reserve in seconds — no account needed.
+    </p>
+    <div className="mt-8 flex flex-wrap gap-3">
+      <Button render={<Link href="/booking" />} size="lg" className="bg-green-600 hover:bg-green-700">
+        Book a Table
+        <ArrowRight className="ml-1 h-4 w-4" />
+      </Button>
+    </div>
+  </div>
+</section>
         {/* Highlights with Open/Closed Status below timings */}
         <section className="border-y border-border/60 bg-card">
           <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
@@ -166,7 +139,7 @@ export default async function HomePage() {
           <div className="grid items-center gap-10 md:grid-cols-2">
             <div className="relative aspect-[4/3] overflow-hidden rounded-2xl">
               <Image 
-                src="/about.jpeg" 
+                src="/about.JPEG" 
                 alt="Pure vegetarian kitchen at Tamarind - Fresh ingredients and authentic Indian cooking" 
                 fill 
                 className="object-cover" 
@@ -198,12 +171,12 @@ export default async function HomePage() {
                 have a table with your name on it.
               </p>
               
-              <div className="relative inline-block group mt-6">
+              <div className="relative inline-block mt-6">
                 <Button variant="outline" className="border-green-600/30 hover:border-green-600 text-green-700 hover:text-green-800 hover:bg-green-50 flex items-center gap-1">
                   Explore our pure veg menu
-                  <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                  <ArrowRight className="h-4 w-4" />
                 </Button>
-                <div className="absolute left-0 mt-2 w-56 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                <div className="absolute left-0 mt-2 w-56 opacity-0 invisible pointer-events-none transition-all duration-200 z-50">
                   <div className="rounded-lg border border-border/60 bg-background/95 backdrop-blur-md shadow-lg py-1">
                     <div className="px-3 py-1.5 text-xs font-medium text-muted-foreground border-b border-border/40">
                       Select Branch

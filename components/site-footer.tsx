@@ -51,7 +51,7 @@ export function SiteFooter() {
   }, []);
 
   return (
-    <footer className="border-t border-border/60 bg-card">
+    <footer id="site-footer" className="border-t border-border/60 bg-card">
       <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
         <div className="grid gap-8 md:grid-cols-12">
           {/* Brand - 4 columns */}

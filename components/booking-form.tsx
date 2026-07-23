@@ -123,53 +123,68 @@ export function BookingForm() {
   }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault()
-    setError(null)
-    setLoading(true)
+  e.preventDefault()
+  setError(null)
+  setLoading(true)
 
-    const form = e.currentTarget
-    const data = new FormData(form)
+  const form = e.currentTarget
+  const data = new FormData(form)
 
-    const selectedBranchData = branches.find(b => String(b.id) === selectedBranch)
+  const selectedBranchData = branches.find(b => String(b.id) === selectedBranch)
 
-    if (isSlotPast(slot, date)) {
-      setError("This time slot has already passed. Please select a future time.")
-      setLoading(false)
+  // Check if slot is selected
+  if (!slot) {
+    setError("Please select a time slot.")
+    setLoading(false)
+    // Clear error after 5 seconds
+    setTimeout(() => setError(null), 5000)
+    return
+  }
+
+  if (isSlotPast(slot, date)) {
+    setError("This time slot has already passed. Please select a future time.")
+    setLoading(false)
+    // Clear error after 5 seconds
+    setTimeout(() => setError(null), 5000)
+    return
+  }
+
+  const payload = {
+    customer_name: String(data.get("customer_name") ?? ""),
+    mobile: String(data.get("mobile") ?? ""),
+    city: String(data.get("city") ?? ""),
+    members: Number(members),
+    booking_date: date,
+    slot,
+    branch_id: parseInt(selectedBranch),
+    branch_name: selectedBranchData?.name || 'The Tamarind Pure Veg B2',
+  }
+
+  try {
+    const res = await fetch("/api/booking", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    })
+    const json = await res.json()
+    if (!res.ok) {
+      setError(json.error ?? "Something went wrong.")
+      // Clear error after 5 seconds
+      setTimeout(() => setError(null), 5000)
       return
     }
-
-    const payload = {
-      customer_name: String(data.get("customer_name") ?? ""),
-      mobile: String(data.get("mobile") ?? ""),
-      city: String(data.get("city") ?? ""),
-      members: Number(members),
-      booking_date: date,
-      slot,
-      branch_id: parseInt(selectedBranch),
-      branch_name: selectedBranchData?.name || 'The Tamarind Pure Veg B2',
-    }
-
-    try {
-      const res = await fetch("/api/booking", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      })
-      const json = await res.json()
-      if (!res.ok) {
-        setError(json.error ?? "Something went wrong.")
-        return
-      }
-      setConfirmation(json.booking)
-      form.reset()
-      setMembers("2")
-      setDate(todayStr)
-    } catch {
-      setError("Network error. Please try again.")
-    } finally {
-      setLoading(false)
-    }
+    setConfirmation(json.booking)
+    form.reset()
+    setMembers("2")
+    setDate(todayStr)
+  } catch {
+    setError("Network error. Please try again.")
+    // Clear error after 5 seconds
+    setTimeout(() => setError(null), 5000)
+  } finally {
+    setLoading(false)
   }
+}
 
   if (confirmation) {
     const branchInfo = branchDetails[confirmation.branch_id] || branchDetails[2]
