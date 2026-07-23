@@ -1,7 +1,7 @@
 "use client"
 
 import { useRef, useState, useEffect } from "react"
-import { ChevronLeft, ChevronRight, Star, Leaf } from "lucide-react"
+import { ChevronLeft, ChevronRight } from "lucide-react"
 import { MenuCard } from "@/components/menu-card"
 import type { MenuItem } from "@/lib/types"
 
@@ -11,6 +11,11 @@ export function FeaturedCarousel({ items }: { items: MenuItem[] }) {
   const [showRightArrow, setShowRightArrow] = useState(true)
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isMobile, setIsMobile] = useState(false)
+
+  // Touch drag state
+  const [isDragging, setIsDragging] = useState(false)
+  const [startX, setStartX] = useState(0)
+  const [scrollLeftStart, setScrollLeftStart] = useState(0)
 
   useEffect(() => {
     const checkMobile = () => {
@@ -64,6 +69,51 @@ export function FeaturedCarousel({ items }: { items: MenuItem[] }) {
     }
   }
 
+  // ========== SWIPE / DRAG HANDLERS ==========
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (!scrollContainerRef.current) return
+    setIsDragging(true)
+    setStartX(e.pageX - scrollContainerRef.current.offsetLeft)
+    setScrollLeftStart(scrollContainerRef.current.scrollLeft)
+    scrollContainerRef.current.style.cursor = 'grabbing'
+    scrollContainerRef.current.style.userSelect = 'none'
+  }
+
+  const handleMouseUp = () => {
+    setIsDragging(false)
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.style.cursor = 'grab'
+      scrollContainerRef.current.style.userSelect = 'auto'
+    }
+  }
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging || !scrollContainerRef.current) return
+    e.preventDefault()
+    const x = e.pageX - scrollContainerRef.current.offsetLeft
+    const walk = (x - startX) * 1.5
+    scrollContainerRef.current.scrollLeft = scrollLeftStart - walk
+  }
+
+  // Touch handlers
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (!scrollContainerRef.current) return
+    setIsDragging(true)
+    setStartX(e.touches[0].pageX - scrollContainerRef.current.offsetLeft)
+    setScrollLeftStart(scrollContainerRef.current.scrollLeft)
+  }
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isDragging || !scrollContainerRef.current) return
+    const x = e.touches[0].pageX - scrollContainerRef.current.offsetLeft
+    const walk = (x - startX) * 1.5
+    scrollContainerRef.current.scrollLeft = scrollLeftStart - walk
+  }
+
+  const handleTouchEnd = () => {
+    setIsDragging(false)
+  }
+
   // Create slides array
   const slides = []
   for (let i = 0; i < items.length; i += itemsPerView) {
@@ -84,7 +134,7 @@ export function FeaturedCarousel({ items }: { items: MenuItem[] }) {
         </div>
         
         <div className="relative">
-          {/* Left Arrow - Always visible when needed */}
+          {/* Left Arrow */}
           {showLeftArrow && (
             <button
               onClick={() => scroll('left')}
@@ -97,10 +147,19 @@ export function FeaturedCarousel({ items }: { items: MenuItem[] }) {
             </button>
           )}
 
+          {/* Scroll Container with Drag/Swipe */}
           <div
             ref={scrollContainerRef}
             onScroll={handleScroll}
-            className="overflow-hidden scroll-smooth"
+            onMouseDown={handleMouseDown}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseUp}
+            onMouseMove={handleMouseMove}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+            className="overflow-hidden scroll-smooth cursor-grab select-none"
+            style={{ scrollBehavior: 'smooth' }}
           >
             <div className="flex gap-3 md:gap-6 transition-all duration-300" style={{ width: '100%' }}>
               {slides.map((slide, slideIndex) => (
@@ -124,7 +183,7 @@ export function FeaturedCarousel({ items }: { items: MenuItem[] }) {
             </div>
           </div>
 
-          {/* Right Arrow - Always visible when needed */}
+          {/* Right Arrow */}
           {showRightArrow && (
             <button
               onClick={() => scroll('right')}
@@ -138,8 +197,8 @@ export function FeaturedCarousel({ items }: { items: MenuItem[] }) {
           )}
         </div>
 
-        {/* Dot indicators for mobile */}
-        {isMobile && totalSlides > 1 && (
+        {/* Dot indicators */}
+        {totalSlides > 1 && (
           <div className="flex justify-center gap-1.5 mt-4">
             {Array.from({ length: totalSlides }).map((_, index) => (
               <button
@@ -147,7 +206,7 @@ export function FeaturedCarousel({ items }: { items: MenuItem[] }) {
                 onClick={() => {
                   setCurrentIndex(index)
                   if (scrollContainerRef.current) {
-                    const cardWidth = 280
+                    const cardWidth = isMobile ? 280 : 320
                     scrollContainerRef.current.scrollTo({
                       left: index * (cardWidth * itemsPerView),
                       behavior: 'smooth'
