@@ -43,7 +43,7 @@ export default async function HomePage() {
         <section className="relative">
           <div className="absolute inset-0">
             <Image
-              src="/hero.JPEG"
+              src="/hero.jpeg"
               alt="Pure vegetarian restaurant - The Tamarind Pure Veg"
               fill
               priority
@@ -166,7 +166,7 @@ export default async function HomePage() {
           <div className="grid items-center gap-10 md:grid-cols-2">
             <div className="relative aspect-[4/3] overflow-hidden rounded-2xl">
               <Image 
-                src="/about.JPEG" 
+                src="/about.jpeg" 
                 alt="Pure vegetarian kitchen at Tamarind - Fresh ingredients and authentic Indian cooking" 
                 fill 
                 className="object-cover" 
