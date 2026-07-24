@@ -50,7 +50,7 @@ export default function LoginPage() {
               <Leaf className="h-10 w-10" />
             </div>
           </div>
-          <h1 className="text-3xl font-bold text-white">Pure Veg Tamarind</h1>
+          <h1 className="text-3xl font-bold text-white">Tamarind Pure Veg</h1>
           <p className="mt-2 text-sm text-gray-400">Admin Dashboard Login</p>
         </div>
 
