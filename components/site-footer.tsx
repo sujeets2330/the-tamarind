@@ -71,7 +71,7 @@ export function SiteFooter() {
             {/* Social Media */}
             <div className="flex items-center gap-3 pt-2">
               <Link
-                href="https://instagram.com/yourusername"
+                href="https://www.instagram.com/tamarind_pure_veg/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="rounded-full bg-muted p-2 transition-all hover:bg-pink-600 hover:text-white"
@@ -81,7 +81,7 @@ export function SiteFooter() {
               </Link>
 
               <Link
-                href="https://facebook.com/yourpage"
+                href="https://www.facebook.com/profile.php?id=61592567273004"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="rounded-full bg-muted p-2 transition-all hover:bg-blue-600 hover:text-white"
