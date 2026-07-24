@@ -34,9 +34,12 @@ export function FeaturedCarousel({ items }: { items: MenuItem[] }) {
     if (!scrollContainerRef.current) return
 
     const container = scrollContainerRef.current
+    const cardWidth = container.querySelector('.card-item')?.getBoundingClientRect()?.width || 0
+    const gap = isMobile ? 16 : 16
+    const scrollAmount = page * (cardWidth + gap) * itemsPerPage
 
     container.scrollTo({
-      left: page * container.clientWidth,
+      left: scrollAmount,
       behavior: "smooth",
     })
 
@@ -56,16 +59,15 @@ export function FeaturedCarousel({ items }: { items: MenuItem[] }) {
     if (!scrollContainerRef.current) return
 
     const container = scrollContainerRef.current
-
-    const page = Math.round(container.scrollLeft / container.clientWidth)
+    const cardWidth = container.querySelector('.card-item')?.getBoundingClientRect()?.width || 0
+    const gap = isMobile ? 16 : 16
+    const page = Math.round(container.scrollLeft / ((cardWidth + gap) * itemsPerPage))
 
     setCurrentPage(page)
 
     setShowLeftArrow(container.scrollLeft > 5)
-
     setShowRightArrow(
-      container.scrollLeft <
-        container.scrollWidth - container.clientWidth - 5
+      container.scrollLeft < container.scrollWidth - container.clientWidth - 5
     )
   }
 
@@ -112,14 +114,14 @@ export function FeaturedCarousel({ items }: { items: MenuItem[] }) {
         </div>
 
         <div className="relative">
-          {/* Left Arrow - Enhanced */}
+          {/* Left Arrow */}
           {showLeftArrow && (
             <button
               onClick={() => scroll("left")}
-              className="absolute left-0 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white shadow-lg hover:bg-primary hover:text-white transition-all duration-200 border border-gray-200 hover:border-primary p-2.5 -ml-4"
+              className="absolute left-0 top-1/2 z-10 -translate-y-1/2 rounded-full bg-gray-800/90 backdrop-blur-sm shadow-lg hover:bg-primary hover:text-white transition-all duration-200 border border-gray-700 hover:border-primary p-2.5 -ml-4 cursor-pointer"
               aria-label="Previous"
             >
-              <ChevronLeft className="h-5 w-5 text-gray-700 hover:text-white transition-colors" />
+              <ChevronLeft className="h-5 w-5 text-gray-300 hover:text-white transition-colors" />
             </button>
           )}
 
@@ -135,25 +137,22 @@ export function FeaturedCarousel({ items }: { items: MenuItem[] }) {
               msOverflowStyle: "none",
             }}
           >
-            <div className="flex">
+            <div className="flex gap-4">
               {items.map((item) => (
                 <div
                   key={item.id}
-                  className="
-                    snap-start
-                    shrink-0
-                    w-full
-                    md:w-1/4
-                    p-2
-                  "
+                  className="card-item snap-start shrink-0 w-full md:w-[calc(25%-12px)]"
                 >
-                  <div className="overflow-hidden rounded-xl border bg-background transition hover:shadow-md">
-                    <div className="relative h-32 md:h-40 bg-muted">
+                  <div 
+                    className="overflow-hidden rounded-xl border bg-background transition-all duration-300 hover:shadow-xl hover:border-primary/30 hover:scale-[1.02] group cursor-pointer"
+                    onClick={() => window.location.href = `/menu/${item.id}`}
+                  >
+                    <div className="relative h-32 md:h-40 bg-muted overflow-hidden">
                       {item.image_url ? (
                         <img
                           src={item.image_url}
                           alt={item.name}
-                          className="h-full w-full object-cover"
+                          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
                         />
                       ) : (
                         <div className="flex h-full items-center justify-center text-muted-foreground">
@@ -180,13 +179,13 @@ export function FeaturedCarousel({ items }: { items: MenuItem[] }) {
                       )}
                     </div>
 
-                    <div className="p-4">
+                    <div className="p-4 transition-colors duration-300 group-hover:bg-primary/5">
                       <div className="flex items-start justify-between">
-                        <h3 className="truncate font-semibold">
+                        <h3 className="truncate font-semibold transition-colors duration-300 group-hover:text-primary">
                           {item.name}
                         </h3>
 
-                        <span className="font-bold text-primary">
+                        <span className="font-bold text-primary transition-transform duration-300 group-hover:scale-110">
                           ₹{item.price}
                         </span>
                       </div>
@@ -197,10 +196,11 @@ export function FeaturedCarousel({ items }: { items: MenuItem[] }) {
 
                       <Button
                         variant="outline"
-                        className="mt-4 w-full"
-                        onClick={() =>
-                          (window.location.href = `/menu/${item.id}`)
-                        }
+                        className="mt-4 w-full transition-all duration-300 group-hover:bg-primary group-hover:text-white group-hover:border-primary cursor-pointer"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          window.location.href = `/menu/${item.id}`
+                        }}
                       >
                         View Item
                       </Button>
@@ -211,14 +211,14 @@ export function FeaturedCarousel({ items }: { items: MenuItem[] }) {
             </div>
           </div>
 
-          {/* Right Arrow - Enhanced */}
+          {/* Right Arrow */}
           {showRightArrow && (
             <button
               onClick={() => scroll("right")}
-              className="absolute right-0 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white shadow-lg hover:bg-primary hover:text-white transition-all duration-200 border border-gray-200 hover:border-primary p-2.5 -mr-4"
+              className="absolute right-0 top-1/2 z-10 -translate-y-1/2 rounded-full bg-gray-800/90 backdrop-blur-sm shadow-lg hover:bg-primary hover:text-white transition-all duration-200 border border-gray-700 hover:border-primary p-2.5 -mr-4 cursor-pointer"
               aria-label="Next"
             >
-              <ChevronRight className="h-5 w-5 text-gray-700 hover:text-white transition-colors" />
+              <ChevronRight className="h-5 w-5 text-gray-300 hover:text-white transition-colors" />
             </button>
           )}
         </div>
@@ -229,7 +229,7 @@ export function FeaturedCarousel({ items }: { items: MenuItem[] }) {
               <button
                 key={index}
                 onClick={() => scrollToPage(index)}
-                className={`h-2 rounded-full transition-all ${
+                className={`h-2 rounded-full transition-all cursor-pointer ${
                   currentPage === index
                     ? "w-8 bg-primary"
                     : "w-2 bg-muted-foreground/30"
